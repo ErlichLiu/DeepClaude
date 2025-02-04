@@ -9,7 +9,7 @@ from app.clients import DeepSeekClient, ClaudeClient
 
 class DeepClaude:
     """处理 DeepSeek 和 Claude API 的流式输出衔接"""
-    
+
     def __init__(self, deepseek_api_key: str, claude_api_key: str, 
                  deepseek_api_url: str = "https://api.deepseek.com/v1/chat/completions", 
                  claude_api_url: str = "https://api.anthropic.com/v1/messages",
@@ -23,10 +23,14 @@ class DeepClaude:
         """
         self.deepseek_client = DeepSeekClient(deepseek_api_key, deepseek_api_url, deepseek_provider)
         self.claude_client = ClaudeClient(claude_api_key, claude_api_url, claude_provider)
-    
-    async def chat_completions_with_stream(self, messages: list, 
-                                         deepseek_model: str = "deepseek-reasoner",
-                                         claude_model: str = "claude-3-5-sonnet-20241022") -> AsyncGenerator[bytes, None]:
+
+    async def chat_completions_with_stream(
+        self,
+        messages: list,
+        model_arg: tuple[float, float, float, float],
+        deepseek_model: str = "deepseek-reasoner",
+        claude_model: str = "claude-3-5-sonnet-20241022"
+    ) -> AsyncGenerator[bytes, None]:
         """处理完整的流式输出过程
         
         Args:
@@ -59,12 +63,12 @@ class DeepClaude:
         output_queue = asyncio.Queue()
         # 队列，用于传递 DeepSeek 推理内容给 Claude
         claude_queue = asyncio.Queue()
-        
+
         # 用于存储 DeepSeek 的推理累积内容
         reasoning_content = []
-        
+
         async def process_deepseek():
-            logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
+            logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}, 提供商: {self.deepseek_client.provider}")
             try:
                 async for content_type, content in self.deepseek_client.stream_chat(messages, deepseek_model):
                     if content_type == "reasoning":
@@ -95,7 +99,7 @@ class DeepClaude:
             # 用 None 标记 DeepSeek 任务结束
             logger.info("DeepSeek 任务处理完成，标记结束")
             await output_queue.put(None)
-        
+
         async def process_claude():
             try:
                 logger.info("等待获取 DeepSeek 的推理内容...")
@@ -115,7 +119,13 @@ class DeepClaude:
                 # 处理可能 messages 内存在 role = system 的情况，如果有，则去掉当前这一条的消息对象
                 claude_messages = [message for message in claude_messages if message.get("role", "") != "system"]
 
-                async for content_type, content in self.claude_client.stream_chat(claude_messages, claude_model):
+                logger.info(f"开始处理 Claude 流，使用模型: {claude_model}, 提供商: {self.claude_client.provider}")
+
+                async for content_type, content in self.claude_client.stream_chat(
+                    messages=claude_messages,
+                    model_arg=model_arg,
+                    model=claude_model,
+                ):
                     if content_type == "answer":
                         response = {
                             "id": chat_id,
@@ -134,6 +144,7 @@ class DeepClaude:
             except Exception as e:
                 logger.error(f"处理 Claude 流时发生错误: {e}")
             # 用 None 标记 Claude 任务结束
+            logger.info("Claude 任务处理完成，标记结束")
             await output_queue.put(None)
         
         # 创建并发任务

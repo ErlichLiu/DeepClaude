@@ -16,13 +16,19 @@ class ClaudeClient(BaseClient):
         """
         super().__init__(api_key, api_url)
         self.provider = provider
-        
-    async def stream_chat(self, messages: list, model: str = "claude-3-5-sonnet-20241022") -> AsyncGenerator[tuple[str, str], None]:
+
+    async def stream_chat(
+        self,
+        messages: list,
+        model_arg: tuple[float, float, float, float],
+        model: str
+    ) -> AsyncGenerator[tuple[str, str], None]:
         """流式对话
         
         Args:
             messages: 消息列表
-            model: 模型名称。如果是 OpenRouter，会自动转换为 'anthropic/claude-3.5-sonnet' 格式
+            model_arg: 模型参数元组[temperature, top_p, presence_penalty, frequency_penalty]
+            model: 模型名称。如果是 OpenRouter, 会自动转换为 'anthropic/claude-3.5-sonnet' 格式
             
         Yields:
             tuple[str, str]: (内容类型, 内容)
@@ -31,7 +37,7 @@ class ClaudeClient(BaseClient):
         """
 
         if self.provider == "openrouter":
-            logger.info("使用 OpenRouter API 作为 Claude 3.5 Sonnet 供应商 ")
+            # logger.info("使用 OpenRouter API 作为 Claude 3.5 Sonnet 供应商 ")
             # 转换模型名称为 OpenRouter 格式
             model = "anthropic/claude-3.5-sonnet"
                 
@@ -41,14 +47,18 @@ class ClaudeClient(BaseClient):
                 "HTTP-Referer": "https://github.com/ErlichLiu/DeepClaude",  # OpenRouter 需要
                 "X-Title": "DeepClaude"  # OpenRouter 需要
             }
-            
+
             data = {
                 "model": model,  # OpenRouter 使用 anthropic/claude-3.5-sonnet 格式
                 "messages": messages,
-                "stream": True
+                "stream": True,
+                "temperature": model_arg[0],
+                "top_p": model_arg[1],
+                "presence_penalty": model_arg[2],
+                "frequency_penalty": model_arg[3]
             }
         elif self.provider == "oneapi":
-            logger.info("使用 OneAPI API 作为 Claude 3.5 Sonnet 供应商 ")
+            # logger.info("使用 OneAPI API 作为 Claude 3.5 Sonnet 供应商 ")
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
@@ -57,26 +67,34 @@ class ClaudeClient(BaseClient):
             data = {
                 "model": model,
                 "messages": messages,
-                "stream": True
+                "stream": True,
+                "temperature": model_arg[0],
+                "top_p": model_arg[1],
+                "presence_penalty": model_arg[2],
+                "frequency_penalty": model_arg[3]
             }
         elif self.provider == "anthropic":
-            logger.info("使用 Anthropic API 作为 Claude 3.5 Sonnet 供应商 ")
+            # logger.info("使用 Anthropic API 作为 Claude 3.5 Sonnet 供应商 ")
             headers = {
                 "x-api-key": self.api_key,
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json",
                 "accept": "text/event-stream",
             }
-            
+
             data = {
                 "model": model,
                 "messages": messages,
                 "max_tokens": 8192,
-                "stream": True
+                "stream": True,
+                "temperature": model_arg[0], # Claude仅支持temperature与top_p
+                "top_p": model_arg[1]
             }
         else:
             raise ValueError(f"不支持的Claude Provider: {self.provider}")
-        
+
+        logger.debug(f"开始流式对话：{data}")
+
         async for chunk in self._make_request(headers, data):
             chunk_str = chunk.decode('utf-8')
             if not chunk_str.strip():

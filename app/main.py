@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -10,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.utils.logger import logger
 from app.utils.auth import verify_api_key
 from app.deepclaude.deepclaude import DeepClaude
-import os
 
 app = FastAPI(title="DeepClaude API")
 
@@ -38,6 +38,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 创建 DeepClaude 实例, 提出为Global变量
+if not DEEPSEEK_API_KEY or not CLAUDE_API_KEY:
+    logger.critical("请设置环境变量 CLAUDE_API_KEY 和 DEEPSEEK_API_KEY")
+    sys.exit(1)
+
+deep_claude = DeepClaude(
+    DEEPSEEK_API_KEY,
+    CLAUDE_API_KEY,
+    DEEPSEEK_API_URL,
+    CLAUDE_API_URL,
+    DEEPSEEK_PROVIDER,
+    CLAUDE_PROVIDER
+)
+
 # 验证日志级别
 logger.debug("当前日志级别为 DEBUG")
 logger.info("开始请求")
@@ -54,42 +68,52 @@ async def chat_completions(request: Request):
     请求体格式应与 OpenAI API 保持一致，包含：
     - messages: 消息列表
     - model: 模型名称（可选）
-    - stream: 是否使用流式输出（必须为 True）
+    - stream: 是否使用流式输出（必须为 True)
+    - temperature: 随机性 (可选)
+    - top_p: top_p (可选)
+    - presence_penalty: 话题新鲜度（可选）
+    - frequency_penalty: 频率惩罚度（可选）
     """
 
     try:
-        # 1. 获取并验证请求数据
+        # 1. 获取基础信息
         body = await request.json()
         messages = body.get("messages")
-        if not messages:
-            return {"error": "messages 不能为空"}
-        
-        if not body.get("stream", False):
-            return {"error": "目前仅支持流式输出，stream 必须为 True"}
-        
-        # 3. 创建 DeepClaude 实例
-        if not DEEPSEEK_API_KEY or not CLAUDE_API_KEY:
-            return {"error": "未设置 API 密钥"}
-            
-        deep_claude = DeepClaude(
-            DEEPSEEK_API_KEY, 
-            CLAUDE_API_KEY, 
-            DEEPSEEK_API_URL,
-            CLAUDE_API_URL,
-            DEEPSEEK_PROVIDER,
-            CLAUDE_PROVIDER
+
+        # 2. 获取并验证参数
+        model_arg = (
+            get_and_validate_params(body)
         )
-        
-        # 4. 返回流式响应
+
+        # 3. 返回流式响应
         return StreamingResponse(
             deep_claude.chat_completions_with_stream(
                 messages=messages,
+                model_arg=model_arg,
                 deepseek_model=DEEPSEEK_MODEL,
                 claude_model=CLAUDE_MODEL
             ),
             media_type="text/event-stream"
         )
-        
+
     except Exception as e:
         logger.error(f"处理请求时发生错误: {e}")
         return {"error": str(e)}
+
+
+def get_and_validate_params(body):
+    """提取获取和验证请求参数的函数"""
+    # TODO: 默认值设定允许自定义
+    temperature: float = body.get("temperature", 0.5)
+    top_p: float = body.get("top_p", 0.9)
+    presence_penalty: float = body.get("presence_penalty", 0.0)
+    frequency_penalty: float = body.get("frequency_penalty", 0.0)
+
+    if not body.get("stream", False):
+        raise ValueError("目前仅支持流式输出, stream 必须为 True")
+
+    if "sonnet" in body.get("model", ""): # Only Sonnet 设定 temperature 必须在 0 到 1 之间
+        if not isinstance(temperature, (float)) or temperature < 0.0 or temperature > 1.0:
+            raise ValueError("Sonnet 设定 temperature 必须在 0 到 1 之间")
+
+    return (temperature, top_p, presence_penalty, frequency_penalty)
