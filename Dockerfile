@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir \
 
 # 复制项目文件
 COPY ./app ./app
-
+COPY .env.example ./app/.env
 # 暴露端口
 EXPOSE 8000
 
