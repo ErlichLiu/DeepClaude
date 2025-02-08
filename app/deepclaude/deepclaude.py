@@ -70,9 +70,11 @@ class DeepClaude:
         reasoning_content = []
 
         async def process_deepseek():
-            logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}, 提供商: {self.deepseek_client.provider}")
+            logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
-                async for content_type, content in self.deepseek_client.stream_chat(messages, deepseek_model, self.is_origin_reasoning):
+                async for content_type, content in self.deepseek_client.stream_chat(
+                    messages, deepseek_model, self.is_origin_reasoning
+                ):
                     if content_type == "reasoning":
                         reasoning_content.append(content)
                         response = {
@@ -146,11 +148,11 @@ class DeepClaude:
             # 用 None 标记 Claude 任务结束
             logger.info("Claude 任务处理完成，标记结束")
             await output_queue.put(None)
-        
+
         # 创建并发任务
         deepseek_task = asyncio.create_task(process_deepseek())
         claude_task = asyncio.create_task(process_claude())
-        
+
         # 等待两个任务完成，通过计数判断
         finished_tasks = 0
         while finished_tasks < 2:
@@ -159,6 +161,6 @@ class DeepClaude:
                 finished_tasks += 1
             else:
                 yield item
-        
+
         # 发送结束标记
         yield b'data: [DONE]\n\n'

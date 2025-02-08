@@ -6,7 +6,7 @@ from .base_client import BaseClient
 
 
 class DeepSeekClient(BaseClient):
-    def __init__(self, api_key: str, api_url: str = "https://api.siliconflow.cn/v1/chat/completions", provider: str = "deepseek"):
+    def __init__(self, api_key: str, api_url: str = "https://api.siliconflow.cn/v1/chat/completions"):
         """初始化 DeepSeek 客户端
         
         Args:
@@ -14,7 +14,6 @@ class DeepSeekClient(BaseClient):
             api_url: DeepSeek API地址
         """
         super().__init__(api_key, api_url)
-        self.provider = provider
         
     def _process_think_tag_content(self, content: str) -> tuple[bool, str]:
         """处理包含 think 标签的内容

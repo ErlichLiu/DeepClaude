@@ -18,7 +18,7 @@ app = FastAPI(title="DeepClaude API")
 ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*")
 
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL")
+ENV_CLAUDE_MODEL = os.getenv("CLAUDE_MODEL")
 CLAUDE_PROVIDER = os.getenv("CLAUDE_PROVIDER", "anthropic") # Claude模型提供商, 默认为anthropic
 CLAUDE_API_URL = os.getenv("CLAUDE_API_URL", "https://api.anthropic.com/v1/messages")
 
@@ -81,6 +81,10 @@ async def chat_completions(request: Request):
         body = await request.json()
         messages = body.get("messages")
 
+        # 获取模型id, 判断是否使用请求体中的模型id, 否则使用环境变量中的模型id
+        body_claude_model = body.get("model", "claude-3-5-sonnet-20241022")
+        claude_model = ENV_CLAUDE_MODEL if ENV_CLAUDE_MODEL != "" else body_claude_model
+
         # 2. 获取并验证参数
         model_arg = (
             get_and_validate_params(body)
@@ -92,7 +96,7 @@ async def chat_completions(request: Request):
                 messages=messages,
                 model_arg=model_arg,
                 deepseek_model=DEEPSEEK_MODEL,
-                claude_model=CLAUDE_MODEL
+                claude_model=claude_model
             ),
             media_type="text/event-stream"
         )
