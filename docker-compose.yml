@@ -1,0 +1,8 @@
+services:
+  deepclaude:
+    image: ghcr.io/erlichliu/deepclaude:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: always # 建议添加 restart policy，确保容器意外退出后可以自动重启

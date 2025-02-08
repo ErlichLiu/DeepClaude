@@ -125,12 +125,48 @@ Step 6. 配置程序到你的 Chatbox（推荐 [NextChat](https://nextchat.dev/)
 **注：本项目采用 uv 作为包管理器，这是一个更快速更现代的管理方式，用于替代 pip，你可以[在此了解更多](https://docs.astral.sh/uv/)****
 
 
-
 # Deployment
 
 > 项目支持 Docker 服务器部署，可自行调用接入常用的 Chatbox，也可以作为渠道一直，将其视为一个特殊的 `DeepClaude`模型接入到 [OneAPI](https://github.com/songquanpeng/one-api) 等产品使用。
 
+**Docker 部署**
 
+1. **构建 Docker 镜像**
+
+   在项目根目录下，使用 Dockerfile 构建镜像。请确保已经安装 Docker 环境。
+
+   ```bash
+   docker build -t deepclaude:latest .
+   ```
+
+2. **运行 Docker 容器**
+
+   运行构建好的 Docker 镜像，将容器的 8000 端口映射到宿主机的 8000 端口。 环境变量的配置建议通过 `.env` 文件进行管理，创建 `.env` 文件并将 `.env.example` 中的配置项复制到 `.env` 文件中，根据你的实际情况修改 `.env` 文件中的配置项。
+
+   ```bash
+   docker run -d \
+       -p 8000:8000 \
+       --env-file .env \
+       --restart always \
+       deepclaude:latest
+   ```
+
+   请确保 `.env` 文件中包含了 `ALLOW_API_KEY`, `ALLOW_ORIGINS`, `DEEPSEEK_API_KEY`, `DEEPSEEK_API_URL`, `DEEPSEEK_MODEL`, `IS_ORIGIN_REASONING`, `CLAUDE_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_PROVIDER`, `CLAUDE_API_URL`, 和 `LOG_LEVEL` 等环境变量的配置。  `ALLOW_ORIGINS` 请设置为允许访问的域名，如 `"http://localhost:3000,https://chat.example.com"` 或 `"*"` 表示允许所有来源。
+
+   **使用 docker-compose 部署**
+
+   或者，你也可以使用 `docker-compose.yml` 文件进行部署，更加方便快捷。
+
+   1. 确保已安装 Docker Compose。
+   2. 复制 `docker-compose.yml` 文件到项目根目录。
+   3. 修改 `.env` 文件中的环境变量配置，将 `.env.example` 文件中的配置项复制到 `.env` 文件中，并根据你的实际情况修改 `.env` 文件。
+   4. 在项目根目录下运行 Docker Compose 命令启动服务：
+
+      ```bash
+      docker-compose up -d
+      ```
+
+   服务启动后，DeepClaude API 将在 `http://宿主机IP:8000/v1/chat/completions`  доступен.
 
 <details>
 <summary><strong>一键部署到 Zeabur</strong></summary> 
