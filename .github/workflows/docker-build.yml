@@ -1,0 +1,61 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  check-repository:
+    runs-on: ubuntu-latest
+    outputs:
+      is_original: ${{ steps.check.outputs.is_original }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ github.repository }}" = "ErlichLiu/DeepClaude" ]; then
+            echo "is_original=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_original=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check-repository
+    if: needs.check-repository.outputs.is_original == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase variables
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO_NAME_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "OWNER_LOWER=$OWNER_LOWER" >> $GITHUB_ENV
+          echo "REPO_NAME_LOWER=$REPO_NAME_LOWER" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ env.OWNER_LOWER }}/${{ env.REPO_NAME_LOWER }}:latest
+            ghcr.io/${{ env.OWNER_LOWER }}/${{ env.REPO_NAME_LOWER }}:${{ github.sha }}

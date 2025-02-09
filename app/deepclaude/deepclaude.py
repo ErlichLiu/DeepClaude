@@ -164,3 +164,83 @@ class DeepClaude:
 
         # 发送结束标记
         yield b'data: [DONE]\n\n'
+        
+    async def chat_completions_without_stream(
+        self,
+        messages: list,
+        model_arg: tuple[float, float, float, float],
+        deepseek_model: str = "deepseek-reasoner",
+        claude_model: str = "claude-3-5-sonnet-20241022"
+    ) -> dict:
+        """处理非流式输出过程
+        
+        Args:
+            messages: 初始消息列表
+            model_arg: 模型参数
+            deepseek_model: DeepSeek 模型名称
+            claude_model: Claude 模型名称
+            
+        Returns:
+            dict: OpenAI 格式的完整响应
+        """
+        chat_id = f"chatcmpl-{hex(int(time.time() * 1000))[2:]}"
+        created_time = int(time.time())
+        reasoning_content = []
+
+        # 1. 获取 DeepSeek 的推理内容（仍然使用流式）
+        try:
+            async for content_type, content in self.deepseek_client.stream_chat(messages, deepseek_model, self.is_origin_reasoning):
+                if content_type == "reasoning":
+                    reasoning_content.append(content)
+                elif content_type == "content":
+                    break
+        except Exception as e:
+            logger.error(f"获取 DeepSeek 推理内容时发生错误: {e}")
+            reasoning_content = ["获取推理内容失败"]
+
+        # 2. 构造 Claude 的输入消息
+        reasoning = "".join(reasoning_content)
+        claude_messages = messages.copy()
+        claude_messages.append({
+            "role": "assistant",
+            "content": f"Here's my reasoning process:\n{reasoning}\n\nBased on this reasoning, I will now provide my response:"
+        })
+        # 处理可能 messages 内存在 role = system 的情况
+        claude_messages = [message for message in claude_messages if message.get("role", "") != "system"]
+
+        # 3. 获取 Claude 的非流式响应
+        try:
+            answer = ""
+            async for content_type, content in self.claude_client.stream_chat(
+                messages=claude_messages,
+                model_arg=model_arg,
+                model=claude_model,
+                stream=False
+            ):
+                if content_type == "answer":
+                    answer += content
+
+            # 4. 构造 OpenAI 格式的响应
+            return {
+                "id": chat_id,
+                "object": "chat.completion",
+                "created": created_time,
+                "model": claude_model,
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": answer,
+                        "reasoning_content": reasoning
+                    },
+                    "finish_reason": "stop"
+                }],
+                "usage": {
+                    "prompt_tokens": -1,  # 由于我们无法准确计算 token，暂时使用 -1
+                    "completion_tokens": -1,
+                    "total_tokens": -1
+                }
+            }
+        except Exception as e:
+            logger.error(f"获取 Claude 响应时发生错误: {e}")
+            raise e

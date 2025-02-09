@@ -62,14 +62,45 @@ async def root():
     logger.info("访问了根路径")
     return {"message": "Welcome to DeepClaude API"}
 
+@app.get("/v1/models")
+async def list_models():
+    """
+    获取可用模型列表
+    返回格式遵循 OpenAI API 标准
+    """
+    models = [{
+        "id": "deepclaude",
+        "object": "model",
+        "created": 1677610602,
+        "owned_by": "deepclaude",
+        "permission": [{
+            "id": "modelperm-deepclaude",
+            "object": "model_permission",
+            "created": 1677610602,
+            "allow_create_engine": False,
+            "allow_sampling": True,
+            "allow_logprobs": True,
+            "allow_search_indices": False,
+            "allow_view": True,
+            "allow_fine_tuning": False,
+            "organization": "*",
+            "group": None,
+            "is_blocking": False
+        }],
+        "root": "deepclaude",
+        "parent": None
+    }]
+    
+    return {"object": "list", "data": models}
+
 @app.post("/v1/chat/completions", dependencies=[Depends(verify_api_key)])
 async def chat_completions(request: Request):
-    """处理聊天完成请求，返回流式响应
+    """处理聊天完成请求，支持流式和非流式输出
     
     请求体格式应与 OpenAI API 保持一致，包含：
     - messages: 消息列表
     - model: 模型名称（可选）
-    - stream: 是否使用流式输出（必须为 True)
+    - stream: 是否使用流式输出（可选，默认为 True)
     - temperature: 随机性 (可选)
     - top_p: top_p (可选)
     - presence_penalty: 话题新鲜度（可选）
@@ -85,17 +116,28 @@ async def chat_completions(request: Request):
         model_arg = (
             get_and_validate_params(body)
         )
+        stream = model_arg[4]  # 获取 stream 参数
 
-        # 3. 返回流式响应
-        return StreamingResponse(
-            deep_claude.chat_completions_with_stream(
+        # 3. 根据 stream 参数返回相应的响应
+        if stream:
+            return StreamingResponse(
+                deep_claude.chat_completions_with_stream(
+                    messages=messages,
+                    model_arg=model_arg[:4],  # 不传递 stream 参数
+                    deepseek_model=DEEPSEEK_MODEL,
+                    claude_model=CLAUDE_MODEL
+                ),
+                media_type="text/event-stream"
+            )
+        else:
+            # 非流式输出
+            response = await deep_claude.chat_completions_without_stream(
                 messages=messages,
-                model_arg=model_arg,
+                model_arg=model_arg[:4],  # 不传递 stream 参数
                 deepseek_model=DEEPSEEK_MODEL,
                 claude_model=CLAUDE_MODEL
-            ),
-            media_type="text/event-stream"
-        )
+            )
+            return response
 
     except Exception as e:
         logger.error(f"处理请求时发生错误: {e}")
@@ -109,12 +151,10 @@ def get_and_validate_params(body):
     top_p: float = body.get("top_p", 0.9)
     presence_penalty: float = body.get("presence_penalty", 0.0)
     frequency_penalty: float = body.get("frequency_penalty", 0.0)
-
-    if not body.get("stream", False):
-        raise ValueError("目前仅支持流式输出, stream 必须为 True")
+    stream: bool = body.get("stream", True)
 
     if "sonnet" in body.get("model", ""): # Only Sonnet 设定 temperature 必须在 0 到 1 之间
         if not isinstance(temperature, (float)) or temperature < 0.0 or temperature > 1.0:
             raise ValueError("Sonnet 设定 temperature 必须在 0 到 1 之间")
 
-    return (temperature, top_p, presence_penalty, frequency_penalty)
+    return (temperature, top_p, presence_penalty, frequency_penalty, stream)

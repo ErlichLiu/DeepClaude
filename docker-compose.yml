@@ -1,0 +1,18 @@
+services:
+  deepclaude:
+    image: ghcr.io/erlichliu/deepclaude:latest
+    ports:
+      - "8000:8000"
+    environment:
+      ALLOW_API_KEY: your_allow_api_key # 请替换为你的 ALLOW_API_KEY
+      ALLOW_ORIGINS: "*" # 请替换为你的 允许的域名，例如 "http://localhost:3000,https://chat.example.com" 或 "*"
+      DEEPSEEK_API_KEY: your_deepseek_api_key # 请替换为你的 DeepSeek API KEY
+      DEEPSEEK_API_URL: https://api.deepseek.com/v1/chat/completions # 如果使用 SiliconFlow，则使用 https://api.siliconflow.cn/v1/chat/completions
+      DEEPSEEK_MODEL: deepseek-reasoner # 如果使用 SiliconFlow，则使用 deepseek-ai/DeepSeek-R1
+      IS_ORIGIN_REASONING: true # 请替换为你的 DeepSeek 推理过程格式配置
+      CLAUDE_API_KEY: your_claude_api_key # 请替换为你的 Claude API KEY
+      CLAUDE_MODEL: claude-3-5-sonnet-20241022
+      CLAUDE_PROVIDER: anthropic # 可选值: anthropic, openrouter, oneapi
+      CLAUDE_API_URL: https://api.anthropic.com/v1/messages # 如果使用 OpenRouter 或 OneAPI，请替换为相应的 API URL
+      LOG_LEVEL: INFO # 可选值：DEBUG, INFO, WARNING, ERROR, CRITICAL
+    restart: always # 建议添加 restart policy，确保容器意外退出后可以自动重启

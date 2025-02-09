@@ -1,0 +1,60 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  # 检查是否为 fork 仓库
+  check-repository:
+    name: Check Repository Type
+    runs-on: ubuntu-latest
+    outputs:
+      is_fork: ${{ steps.check.outputs.is_fork }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ github.repository }}" != "ErlichLiu/DeepClaude" ]; then
+            echo "is_fork=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_fork=false" >> $GITHUB_OUTPUT
+          fi
+
+  # 同步上游更改
+  sync:
+    needs: check-repository
+    if: needs.check-repository.outputs.is_fork == 'true'
+    name: Sync Latest From Upstream
+    runs-on: ubuntu-latest
+    steps:
+      # 标准签出
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        # 如果上游仓库有对.github/workflows/下的文件进行变更，则需要使用有workflow权限的token
+        # with:
+        #   token: ${{ secrets.ACTION_TOKEN }}
+      
+      # 获取分支名（区分 PR 和普通提交场景）
+      - name: Get branch name (merge)
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+        
+      - name: Get branch name (pull request)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+      
+      # 运行同步动作
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          upstream_sync_repo: ErlichLiu/DeepClaude
+          upstream_sync_branch: ${{ env.BRANCH_NAME }}
+          target_sync_branch: ${{ env.BRANCH_NAME }}
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_pull_args: --allow-unrelated-histories --no-edit
+          shallow_since: '1 days ago'
+          test_mode: false
