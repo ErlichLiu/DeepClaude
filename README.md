@@ -9,7 +9,8 @@
 </div>
 
 <div>
-<h3 style="color: #FF9909"> 特别说明：对于不太会部署，只是希望使用上最强 DeepClaude 组合的朋友，请直接联系 Erlich（微信：geekthings）购买按量付费的 API 即可，国内可以直接访问 </h3>
+<h3 style="color: #FF9909"> 特别说明：对于不太会部署，只是希望使用上最强 DeepClaude 组合的朋友，可以直接访问 Erlich 个人网站自助购买按量付费的 API：https://erlich.fun/deepclaude-pricing
+也可以直接联系 Erlich（微信：geekthings）国内可以直接访问 </h3>
 </div>
 
 ---
