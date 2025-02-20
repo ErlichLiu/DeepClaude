@@ -1,5 +1,5 @@
 <div>
-<h1>DeepClaude 🐬🧠 - OpenAI Compatible</h1>
+<h1>DeepClaude - OpenAI Compatible</h1>
 
 <a href="https://github.com/getasterisk/deepclaude"> Inspiration from getasterisk/deepclaude</a>
 
@@ -9,8 +9,6 @@
 </div>
 
 <div>
-<h3 style="color: #FF9909"> 特别说明：对于不太会部署，只是希望使用上最强 DeepClaude 组合的朋友，可以直接访问 Erlich 个人网站自助购买按量付费的 API：https://erlich.fun/deepclaude-pricing
-也可以直接联系 Erlich（微信：geekthings）国内可以直接访问 </h3>
 </div>
 
 ---
@@ -91,7 +89,7 @@
 
 ## 1. 获得运行所需的 API
 
-1. 获取 DeepSeek API，因为最近 DeepSeek 还在遭受攻击，所以经常无法使用，推荐使用 Siliconflow 的效果更好（也可以本地 Ollama 的）: https://cloud.siliconflow.cn/i/RXikvHE2 (点击此链接可以获得到 2000 万免费 tokens)
+1. 获取 DeepSeek API，因为最近 DeepSeek 还在遭受攻击，所以经常无法使用，推荐使用 Siliconflow 的效果更好（也可以本地 Ollama 的）: [https://cloud.siliconflow.cn/i/jr7QNXnS](https://cloud.siliconflow.cn/i/jr7QNXnS) (点击此链接可以获得到 2000 万免费 tokens)
 2. 获取 Claude 的 API KEY （目前还没有做中转模式，以及对 Google 和 AWS 托管的版本的兼容支持，欢迎 PR）：https://console.anthropic.com
 
 ## 2. 开始运行（本地运行）
@@ -273,10 +271,3 @@ Step 6. 配置程序到你的 Chatbox（推荐 [NextChat](https://nextchat.dev/)
 # Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=ErlichLiu/DeepClaude&type=Date)](https://star-history.com/#ErlichLiu/DeepClaude&Date)
-
-# Buy me a coffee
-<img src="https://img.erlich.fun/personal-blog/uPic/IMG_3625.JPG" alt="微信赞赏码" style="width: 400px;"/>
-
-# About Me
-- Email: erlichliu@gmail.com
-- Website: [Erlichliu](https://erlich.fun)
