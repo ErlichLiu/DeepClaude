@@ -229,12 +229,16 @@ class DeepClaude:
 
         # 1. 获取 DeepSeek 的推理内容（仍然使用流式）
         try:
+            logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             async for content_type, content in self.deepseek_client.stream_chat(
                 messages, deepseek_model, self.is_origin_reasoning
             ):
                 if content_type == "reasoning":
                     reasoning_content.append(content)
                 elif content_type == "content":
+                    logger.info(
+                        f"DeepSeek 推理完成，收集到的推理内容长度：{len(''.join(reasoning_content))}"
+                    )
                     break
         except Exception as e:
             logger.error(f"获取 DeepSeek 推理内容时发生错误: {e}")
@@ -277,6 +281,9 @@ class DeepClaude:
         try:
             answer = ""
             output_tokens = []  # 初始化 output_tokens
+            logger.info(
+                f"开始处理 Claude 流，使用模型: {claude_model}, 提供商: {self.claude_client.provider}"
+            )
             async for content_type, content in self.claude_client.stream_chat(
                 messages=claude_messages,
                 model_arg=model_arg,
@@ -288,6 +295,7 @@ class DeepClaude:
                     output_tokens = encoding.encode(answer)  # 更新 output_tokens
                 logger.debug(f"输出 Tokens: {len(output_tokens)}")
 
+            logger.info("Claude 任务处理完成，标记结束")
             # 4. 构造 OpenAI 格式的响应
             return {
                 "id": chat_id,
