@@ -38,6 +38,7 @@ OPENAI_COMPOSITE_API_URL = os.getenv("OPENAI_COMPOSITE_API_URL")
 OPENAI_COMPOSITE_MODEL = os.getenv("OPENAI_COMPOSITE_MODEL")
 
 IS_ORIGIN_REASONING = os.getenv("IS_ORIGIN_REASONING", "True").lower() == "true"
+IS_STREAM_OUTPUT = os.getenv("IS_STREAM_OUTPUT", "True").lower() == "true"  # 新增配置项
 
 # CORS设置
 allow_origins_list = (
@@ -130,11 +131,15 @@ async def chat_completions(request: Request):
         # 2. 获取并验证参数
         model_arg = get_and_validate_params(body)
         stream = model_arg[4]  # 获取 stream 参数
-
+        # 使用环境变量 IS_STREAM_OUTPUT 覆盖请求中的 stream 参数
+        if IS_STREAM_OUTPUT is not None:
+            stream = IS_STREAM_OUTPUT
         # 3. 根据模型选择不同的处理方式
         if model == "deepclaude":
             # 使用 DeepClaude
-            claude_model = ENV_CLAUDE_MODEL if ENV_CLAUDE_MODEL else "claude-3-5-sonnet-20241022"
+            claude_model = (
+                ENV_CLAUDE_MODEL if ENV_CLAUDE_MODEL else "claude-3-5-sonnet-20241022"
+            )
             if stream:
                 return StreamingResponse(
                     deep_claude.chat_completions_with_stream(
