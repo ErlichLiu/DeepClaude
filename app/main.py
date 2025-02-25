@@ -152,7 +152,7 @@ async def chat_completions(request: Request):
                     deepseek_model=DEEPSEEK_MODEL,
                     claude_model=claude_model,
                 )
-        else:
+        elif model == "deepgemini":
             # 使用 OpenAI 兼容组合模型
             if stream:
                 return StreamingResponse(
@@ -170,6 +170,26 @@ async def chat_completions(request: Request):
                     model_arg=model_arg[:4],
                     deepseek_model=DEEPSEEK_MODEL,
                     target_model=OPENAI_COMPOSITE_MODEL,
+                )
+        else:
+            # 使用客户端请求体中的模型
+            claude_model = model 
+            if stream:
+                return StreamingResponse(
+                    deep_claude.chat_completions_with_stream(
+                        messages=messages,
+                        model_arg=model_arg[:4],
+                        deepseek_model=DEEPSEEK_MODEL,
+                        claude_model=claude_model,
+                    ),
+                    media_type="text/event-stream",
+                )
+            else:
+                return await deep_claude.chat_completions_without_stream(
+                    messages=messages,
+                    model_arg=model_arg[:4],
+                    deepseek_model=DEEPSEEK_MODEL,
+                    claude_model=claude_model,
                 )
 
     except Exception as e:
