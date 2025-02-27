@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import AsyncGenerator, Optional
+import os
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError, ServerTimeoutError
@@ -35,6 +36,10 @@ class BaseClient(ABC):
         self.api_key = api_key
         self.api_url = api_url
         self.timeout = timeout or self.DEFAULT_TIMEOUT
+        
+        # 从环境变量获取代理配置
+        self.use_proxy = os.getenv("USE_PROXY", "false").lower() == "true"
+        self.proxy_url = os.getenv("PROXY_URL", None)  # 如果未设置代理地址，默认为 None
 
     async def _make_request(
         self, headers: dict, data: dict, timeout: Optional[aiohttp.ClientTimeout] = None
@@ -57,11 +62,19 @@ class BaseClient(ABC):
         request_timeout = timeout or self.timeout
 
         try:
-            # 使用 connector 参数来优化连接池
+            # 配置连接器和代理
             connector = aiohttp.TCPConnector(limit=100, force_close=True)
+            
+            # 根据环境变量决定是否使用代理
+            proxy = self.proxy_url if self.use_proxy else None
+            
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
-                    self.api_url, headers=headers, json=data, timeout=request_timeout
+                    self.api_url,
+                    headers=headers,
+                    json=data,
+                    timeout=request_timeout,
+                    proxy=proxy
                 ) as response:
                     # 检查响应状态
                     if not response.ok:
