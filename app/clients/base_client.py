@@ -62,7 +62,7 @@ class BaseClient(ABC):
         request_timeout = timeout or self.timeout
 
         try:
-            # 配置连接器和代理
+            # 使用 connector 参数来优化连接池
             connector = aiohttp.TCPConnector(limit=100, force_close=True)
             
             # 根据环境变量决定是否使用代理
