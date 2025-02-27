@@ -70,10 +70,7 @@ class BaseClient(ABC):
             
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
-                    self.api_url,
-                    headers=headers,
-                    json=data,
-                    timeout=request_timeout,
+                    self.api_url, headers=headers, json=data, timeout=request_timeout,
                     proxy=proxy
                 ) as response:
                     # 检查响应状态
