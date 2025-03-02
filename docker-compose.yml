@@ -1,5 +1,3 @@
-version: '1.0'
-
 services:
   deepclaude:
     image: ghcr.io/erlichliu/deepclaude:latest
@@ -7,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
-    
-    restart: always # 建议添加 restart policy，确保容器意外退出后可以自动重启
+      - "8000:8000"    
+    restart: always # 建议添加 restart policy，确保容器意外退出后可以自动重启3
+    volumes:
+      - ./model_configs.json:/app/app/model_manager/model_configs.json
