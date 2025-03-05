@@ -40,6 +40,8 @@ class DeepClaude:
             claude_api_key, claude_api_url, claude_provider, proxy=proxy
         )
         self.is_origin_reasoning = is_origin_reasoning
+        self.claude_api_url = claude_api_url
+        self.deepseek_api_url = deepseek_api_url
 
     async def chat_completions_with_stream(
         self,
@@ -88,6 +90,7 @@ class DeepClaude:
         async def process_deepseek():
             logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
+                logger.info(f"1. 第一阶段推理请求:{deepseek_model}\napi_url:{self.deepseek_api_url}\ndata:{messages}\n")
                 async for content_type, content in self.deepseek_client.stream_chat(
                     messages, deepseek_model, self.is_origin_reasoning
                 ):
@@ -113,10 +116,6 @@ class DeepClaude:
                             f"data: {json.dumps(response)}\n\n".encode("utf-8")
                         )
                     elif content_type == "content":
-                        # 当收到 content 类型时，将完整的推理内容发送到 claude_queue，并结束 DeepSeek 流处理
-                        logger.info(
-                            f"DeepSeek 推理完成，收集到的推理内容长度：{len(''.join(reasoning_content))}"
-                        )
                         await claude_queue.put("".join(reasoning_content))
                         break
             except Exception as e:
@@ -142,6 +141,7 @@ class DeepClaude:
                 combined_content = f"""
                 Here's my another model's reasoning process:\n{reasoning}\n\n
                 Based on this reasoning, provide your response directly to me:"""
+                logger.info(f"2. 第二阶段推理请求:{claude_model}\napi_url:{self.claude_api_url}\ndata:{combined_content}\n")
 
                 # 提取 system message 并同时过滤掉 system messages
                 system_content = ""
