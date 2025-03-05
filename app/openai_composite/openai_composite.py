@@ -35,6 +35,8 @@ class OpenAICompatibleComposite:
         self.deepseek_client = DeepSeekClient(deepseek_api_key, deepseek_api_url, proxy=proxy)
         self.openai_client = OpenAICompatibleClient(openai_api_key, openai_api_url, proxy=proxy)
         self.is_origin_reasoning = is_origin_reasoning
+        self.openai_api_url = openai_api_url
+        self.deepseek_api_url = deepseek_api_url
 
     async def chat_completions_with_stream(
         self,
@@ -77,12 +79,12 @@ class OpenAICompatibleComposite:
         # 队列，用于传递 DeepSeek 推理内容
         reasoning_queue = asyncio.Queue()
 
-        # 用于存储 DeepSeek 的推理累积内容
-        reasoning_content = []
-
         async def process_deepseek():
+            # 用于存储 DeepSeek 的推理累积内容
+            reasoning_content = []
             logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
+                logger.info(f"1. 第一阶段推理请求:{deepseek_model}\napi_url:{self.deepseek_api_url}\ndata:{messages}\n")
                 async for content_type, content in self.deepseek_client.stream_chat(
                     messages, deepseek_model, self.is_origin_reasoning
                 ):
@@ -108,15 +110,13 @@ class OpenAICompatibleComposite:
                             f"data: {json.dumps(response)}\n\n".encode("utf-8")
                         )
                     elif content_type == "content":
-                        # 当收到 content 类型时，将完整的推理内容发送到 reasoning_queue
-                        logger.info(
-                            f"DeepSeek 推理完成，收集到的推理内容长度：{len(''.join(reasoning_content))}"
-                        )
                         await reasoning_queue.put("".join(reasoning_content))
                         break
+
             except Exception as e:
                 logger.error(f"处理 DeepSeek 流时发生错误: {e}")
                 await reasoning_queue.put("")
+
             # 标记 DeepSeek 任务结束
             logger.info("DeepSeek 任务处理完成，标记结束")
             await output_queue.put(None)
@@ -137,6 +137,7 @@ class OpenAICompatibleComposite:
                 combined_content = f"""
                 Here's my another model's reasoning process:\n{reasoning}\n\n
                 Based on this reasoning, provide your response directly to me:"""
+                logger.info(f"2. 第二阶段推理请求:{target_model}\napi_url:{self.openai_api_url}\ndata:{combined_content}\n")
 
                 # 检查过滤后的消息列表是否为空
                 if not openai_messages:
