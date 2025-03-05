@@ -77,10 +77,9 @@ class OpenAICompatibleComposite:
         # 队列，用于传递 DeepSeek 推理内容
         reasoning_queue = asyncio.Queue()
 
-        # 用于存储 DeepSeek 的推理累积内容
-        reasoning_content = []
-
         async def process_deepseek():
+            # 用于存储 DeepSeek 的推理累积内容
+            reasoning_content = []
             logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
                 async for content_type, content in self.deepseek_client.stream_chat(
@@ -114,9 +113,11 @@ class OpenAICompatibleComposite:
                         )
                         await reasoning_queue.put("".join(reasoning_content))
                         break
+
             except Exception as e:
                 logger.error(f"处理 DeepSeek 流时发生错误: {e}")
                 await reasoning_queue.put("")
+
             # 标记 DeepSeek 任务结束
             logger.info("DeepSeek 任务处理完成，标记结束")
             await output_queue.put(None)

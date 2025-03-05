@@ -119,9 +119,11 @@ class DeepClaude:
                         )
                         await claude_queue.put("".join(reasoning_content))
                         break
+
             except Exception as e:
                 logger.error(f"处理 DeepSeek 流时发生错误: {e}")
                 await claude_queue.put("")
+
             # 用 None 标记 DeepSeek 任务结束
             logger.info("DeepSeek 任务处理完成，标记结束")
             await output_queue.put(None)

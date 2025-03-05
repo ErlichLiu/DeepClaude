@@ -156,3 +156,7 @@ class DeepSeekClient(BaseClient):
                 logger.error(f"JSON 解析错误: {e}")
             except Exception as e:
                 logger.error(f"处理 chunk 时发生错误: {e}")
+            finally:
+                self._reset_state()
+                accumulated_content = ""
+                is_collecting_think = False
