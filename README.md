@@ -135,6 +135,23 @@ Step 4. 打开浏览器访问 http://127.0.0.1:8000/config 输入默认 api key�
 按照提示在“推理模型这一栏”配置一个火山云引擎的 api key，点击编辑，粘贴进去 api key 后点击保存即可
 ![配置火山云引擎的 api key](https://img.erlich.fun/personal-blog/uPic/PNfOcU.png)
 
+`是否支持原生推理`选项控制了两套针对推理模型返回思考内容.
+
+- 支持原生推理: 推理模型在返回体`reasoning_content`字段返回推理内容, 在`content`字段返回回答内容. 例如:
+  - DeepSeek官方 `deepseek-reasoner`
+  - Siliconflow `deepseek-ai/deepseek-r1`
+- 不支持原生推理: 推理模型在`content`字段中以`<think></think>`标签包裹推理内容返回. 例如:
+  - 派欧算力云 `deepseek/deepseek-r1`, `deepseek/deepseek-r1/community`, `deepseek/deepseek-r1-turbo`
+  - AiHubMix `aihubmix-DeepSeek-R1`
+  - Cluade 3.7 Sonnet Thinking
+
+大多数服务商提供的deepseek-r1均支持原生推理, 所以推荐默认开启. 如果不确定可以在外部使用聊天框架(Chatbox)测试模型响应内容. 如果出现`<think></think>`标签则需要关闭`支持原生推理`选项.
+
+不支持原生推理的deepseek-r1可能需要prompt来触发思考, 若日志中收集到推理内容长度一直为0, 而且出现`<think>`字样, 则考虑检查此因素:
+
+![image](https://github.com/user-attachments/assets/63bf0a9f-19cf-49d4-aa28-e916b2a62138)
+
+    
 按照提示在“目标模型”配置一个 Claude 3.7 Sonnet 的 api key 以及一个 Gmeini 的 api key，Gemini 的 api key 可以在：https://aistudio.google.com/apikey 获取
 ![配置 Claude 3.7 Sonnet 的 api key](https://img.erlich.fun/personal-blog/uPic/ydKSHW.png)
 同理，也可以配置一个 Gemini 的 api key 分别到 deepgeminiflash 和 deepgeminipro
