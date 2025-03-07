@@ -84,10 +84,9 @@ class DeepClaude:
         # 队列，用于传递 DeepSeek 推理内容给 Claude
         claude_queue = asyncio.Queue()
 
-        # 用于存储 DeepSeek 的推理累积内容
-        reasoning_content = []
-
         async def process_deepseek():
+            # 用于存储 DeepSeek 的推理累积内容
+            reasoning_content = []
             logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
                 logger.info(f"1. 第一阶段推理请求:{deepseek_model}\napi_url:{self.deepseek_api_url}\ndata:{messages}\n")
