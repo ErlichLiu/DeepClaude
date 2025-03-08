@@ -124,9 +124,12 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
-Step 3. 本地运行
+Step 3. 运行
 ```bash
+## 本地运行
 uvicorn app.main:app --port 8000
+## 服务器运行
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 Step 4. 打开浏览器访问 http://127.0.0.1:8000/config 输入默认 api key：123456 （如果你运行在云端，请尽快登录后在系统设置内更改，避免被其他人盗用，本地登录则无需更改）

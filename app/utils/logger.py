@@ -1,28 +1,7 @@
 import logging
 import colorlog
 import sys
-import os
-from dotenv import load_dotenv
 
-# 确保环境变量被加载
-load_dotenv()
-
-def get_log_level() -> int:
-    """从环境变量获取日志级别
-    
-    Returns:
-        int: logging 模块定义的日志级别
-    """
-    level_map = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR,
-        'CRITICAL': logging.CRITICAL
-    }
-    
-    level = os.getenv('LOG_LEVEL', 'INFO').upper()
-    return level_map.get(level, logging.INFO)
 
 def setup_logger(name: str = "DeepClaude") -> logging.Logger:
     """设置一个彩色的logger
@@ -33,38 +12,36 @@ def setup_logger(name: str = "DeepClaude") -> logging.Logger:
     Returns:
         logging.Logger: 配置好的logger实例
     """
-    logger = colorlog.getLogger(name)
-    
-    if logger.handlers:
-        return logger
-    
-    # 从环境变量获取日志级别
-    log_level = get_log_level()
-    
+    logger_instance = colorlog.getLogger(name)
+
+    if logger_instance.handlers:
+        return logger_instance
+
     # 设置日志级别
-    logger.setLevel(log_level)
-    
+    logger_instance.setLevel(logging.DEBUG)
+
     # 创建控制台处理器
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(log_level)
-    
+    console_handler.setLevel(logging.DEBUG)
+
     # 设置彩色日志格式
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        }
+            "DEBUG": "cyan",
+            "INFO": "green",
+            "WARNING": "yellow",
+            "ERROR": "red",
+            "CRITICAL": "red,bg_white",
+        },
     )
-    
+
     console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    
-    return logger
+    logger_instance.addHandler(console_handler)
+
+    return logger_instance
+
 
 # 创建一个默认的logger实例
 logger = setup_logger()

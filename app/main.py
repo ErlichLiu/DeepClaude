@@ -1,7 +1,6 @@
 import os
 import logging
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -11,8 +10,6 @@ from app.utils.auth import verify_api_key
 from app.utils.logger import logger
 from app.manager import model_manager
 
-# 加载环境变量
-load_dotenv()
 
 # 获取模型管理器
 from app.manager.model_manager import model_manager
