@@ -73,6 +73,7 @@ class DeepSeekClient(BaseClient):
             "model": model,
             "messages": messages,
             "stream": True,
+            "max_tokens": 5
         }
 
         logger.debug(f"开始流式对话：{data}")

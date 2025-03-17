@@ -181,7 +181,7 @@ class ModelManager:
         top_p: float = body.get("top_p", 0.9)
         presence_penalty: float = body.get("presence_penalty", 0.0)
         frequency_penalty: float = body.get("frequency_penalty", 0.0)
-        stream: bool = body.get("stream", True)
+        stream: bool = body.get("stream", False)
 
         # 模型特定验证
         if "sonnet" in model:  # Sonnet 模型温度必须在 0 到 1 之间

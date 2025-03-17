@@ -33,6 +33,9 @@
 <details>
 <summary><strong>更新日志：</strong></summary> 
 <div>
+
+2025-03-10.1: deepseek r1 推理部分 max_token 改为 5，节省输出 Tokens 消耗；非流式输出部分增加 reasoning_content 数据字段的返回；将非流式输出设置为缺省值，方便 dify 等工具使用。
+
 2025-03-05.1: 更改docker compose配置, 使用volume将容器配置文件绑定至本地, 避免重启容器时丢失配置. 同时设置失败自动重启.
    
 2025-03-02.1: 更新 1.0 版本，支持图形化配置界面，取消 .env 配置，预配置模板，配置更方便

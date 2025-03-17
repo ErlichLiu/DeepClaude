@@ -16,3 +16,9 @@ wheels/
 
 # Windsurf
 .windsurfrules
+
+# DS_Store
+.DS_Store
+
+# model_manager
+model_manager/model_configs.json

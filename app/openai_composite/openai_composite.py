@@ -228,6 +228,7 @@ class OpenAICompatibleComposite:
         }
 
         content_parts = []
+        reasoning_parts = []
         async for chunk in self.chat_completions_with_stream(
             messages, model_arg, deepseek_model, target_model
         ):
@@ -242,13 +243,19 @@ class OpenAICompatibleComposite:
                         delta = response_data["choices"][0]["delta"]
                         if "content" in delta and delta["content"]:
                             content_parts.append(delta["content"])
+                        if "reasoning_content" in delta and delta["reasoning_content"]:
+                            reasoning_parts.append(delta["reasoning_content"])
                 except json.JSONDecodeError:
                     continue
 
         full_response["choices"] = [
             {
                 "index": 0,
-                "message": {"role": "assistant", "content": "".join(content_parts)},
+                "message": {
+                    "role": "assistant", 
+                    "content": "".join(content_parts),
+                    "reasoning_content": "".join(reasoning_parts)
+                },
                 "finish_reason": "stop",
             }
         ]

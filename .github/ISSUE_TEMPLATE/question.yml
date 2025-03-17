@@ -1,0 +1,78 @@
+name: 使用问题咨询
+description: 提出一个关于使用或理解的问题
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您提问！为了让我们能够更高效地回答，请提供足够的背景信息。
+        
+        在提问前，请考虑：
+        1. 是否已查阅项目文档？
+        2. 是否已搜索现有 issues 和讨论？
+        
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: 提问前确认
+      description: 请确认以下几点以帮助我们更好地回答您的问题
+      options:
+        - label: 我已经查看了项目文档并没有找到答案
+          required: true
+        - label: 我已经搜索了现有的 issues，确认没有类似的问题
+          required: true
+          
+  - type: dropdown
+    id: category
+    attributes:
+      label: 问题类别
+      description: 您的问题主要属于哪个方面？
+      options:
+        - 安装/配置
+        - 使用方法
+        - 概念理解
+        - 最佳实践
+        - 错误解释
+        - 其他
+    validations:
+      required: true
+      
+  - type: textarea
+    id: question
+    attributes:
+      label: 您的问题
+      description: 请清晰详细地描述您的问题
+      placeholder: 我想了解如何...或者我对...感到困惑
+    validations:
+      required: true
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景信息
+      description: 提供有助于理解您问题的背景信息
+      placeholder: |
+        - 您使用的是哪个版本？
+        - 您的环境是什么样的？
+        - 您尝试实现什么目标？
+        - 您已经尝试了什么方法？
+    validations:
+      required: true
+      
+  - type: textarea
+    id: code_example
+    attributes:
+      label: 代码示例（如适用）
+      description: 如果适用，请提供相关代码示例
+      render: shell
+    validations:
+      required: false
+      
+  - type: textarea
+    id: additional
+    attributes:
+      label: 其他信息
+      description: 任何其他相关信息、截图或链接
+    validations:
+      required: false

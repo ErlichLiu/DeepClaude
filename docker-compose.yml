@@ -2,6 +2,7 @@ version: '1.0'
 
 services:
   deepclaude:
+    container_name: deepclaude
     image: ghcr.io/erlichliu/deepclaude:latest
     build:
       context: .
@@ -9,5 +10,5 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./model_configs.json:/app/app/model_manager/model_configs.json
+      - ./app/model_manager/model_configs.json:/app/app/model_manager/model_configs.json
     restart: always # 建议添加 restart policy，确保容器意外退出后可以自动重启
