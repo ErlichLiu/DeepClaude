@@ -38,6 +38,13 @@ class BaseClient(ABC):
         self.api_url = api_url
         self.timeout = timeout or self.DEFAULT_TIMEOUT
         self.proxy = proxy
+        self.active_http_response = None
+
+    def reset_state(self) -> None:
+        if not self.active_http_response.closed:
+            logger.info("关闭 deepseek 连接")
+            self.active_http_response.close()
+        del self.active_http_response
 
     async def _make_request(
         self, headers: dict, data: dict, timeout: Optional[aiohttp.ClientTimeout] = None
@@ -81,6 +88,8 @@ class BaseClient(ABC):
                     timeout=request_timeout,
                     proxy=proxy_url
                 ) as response:
+                    self.active_http_response = response
+
                     # 检查响应状态
                     if not response.ok:
                         error_text = await response.text()

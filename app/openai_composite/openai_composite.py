@@ -8,6 +8,7 @@ from typing import AsyncGenerator, Dict, Any, List
 from app.clients import DeepSeekClient
 from app.clients.openai_compatible_client import OpenAICompatibleClient
 from app.utils.logger import logger
+from ..clients.deepseek_client import DeepSeekClient, DropContent
 
 
 class OpenAICompatibleComposite:
@@ -79,10 +80,10 @@ class OpenAICompatibleComposite:
         # 队列，用于传递 DeepSeek 推理内容
         reasoning_queue = asyncio.Queue()
 
-        # 用于存储 DeepSeek 的推理累积内容
-        reasoning_content = []
-
         async def process_deepseek():
+            logger.info(f"1. 第一阶段推理请求:{deepseek_model}\ndata:{messages}\n")
+            # 用于存储 DeepSeek 的推理累积内容
+            reasoning_content = []
             logger.info(f"开始处理 DeepSeek 流，使用模型：{deepseek_model}")
             try:
                 async for content_type, content in self.deepseek_client.stream_chat(
@@ -110,15 +111,17 @@ class OpenAICompatibleComposite:
                             f"data: {json.dumps(response)}\n\n".encode("utf-8")
                         )
                     elif content_type == "content":
-                        # 当收到 content 类型时，将完整的推理内容发送到 reasoning_queue
-                        logger.info(
-                            f"DeepSeek 推理完成，收集到的推理内容长度：{len(''.join(reasoning_content))}"
-                        )
                         await reasoning_queue.put("".join(reasoning_content))
-                        break
+                        raise DropContent("DeepSeek 思考推理部分完成")
+    
+            except DropContent as e:
+                logger.info({e})
+                self.deepseek_client.reset_state()
+
             except Exception as e:
                 logger.error(f"处理 DeepSeek 流时发生错误: {e}")
                 await reasoning_queue.put("")
+
             # 标记 DeepSeek 任务结束
             logger.info("DeepSeek 任务处理完成，标记结束")
             await output_queue.put(None)
@@ -139,6 +142,8 @@ class OpenAICompatibleComposite:
                 combined_content = f"""
                 Here's my another model's reasoning process:\n{reasoning}\n\n
                 Based on this reasoning, provide your response directly to me:"""
+
+                logger.info(f"2. 第二阶段推理请求:{target_model}\ndata:{combined_content}\n")
 
                 # 检查过滤后的消息列表是否为空
                 if not openai_messages:
