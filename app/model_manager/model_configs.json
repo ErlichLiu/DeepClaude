@@ -2,12 +2,11 @@
     "reasoner_models": {
         "DeepSeek/DeepSeek-Reasoner": {
             "model_id": "deepseek-reasoner",
-            "api_key": "*************",
+            "api_key": "dsadsadsadas",
             "api_base_url": "https://api.deepseek.com",
             "api_request_address": "v1/chat/completions",
             "is_origin_reasoning": true,
-            "is_valid": false,
-            "proxy_open": false
+            "is_valid": true
         },
         "Volcengine/DeepSeek-R1": {
             "model_id": "deepseek-r1-250120",
@@ -76,7 +75,7 @@
         ],
         "log_level": "INFO",
         "api_key": "123456",
-        "save_deepseek_tokens":false,
+        "save_deepseek_tokens": false,
         "save_deepseek_tokens_max_tokens": 5
     },
     "composite_models": {

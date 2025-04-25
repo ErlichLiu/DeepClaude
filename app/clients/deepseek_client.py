@@ -9,6 +9,7 @@ from .base_client import BaseClient
 
 
 class DeepSeekClient(BaseClient):
+    """DeepSeek API 客户端"""
     def __init__(
         self,
         api_key: str,
@@ -79,7 +80,7 @@ class DeepSeekClient(BaseClient):
         if is_origin_reasoning:
             data["max_tokens"] = 5
 
-        logger.debug(f"开始流式对话：{data}")
+        logger.debug("开始流式对话: ")
 
         accumulated_content = ""
         is_collecting_think = False
@@ -107,16 +108,14 @@ class DeepSeekClient(BaseClient):
                                 # 处理 reasoning_content
                                 if delta.get("reasoning_content"):
                                     content = delta["reasoning_content"]
-                                    logger.debug(f"提取推理内容：{content}")
+                                    logger.debug("提取推理内容：%s", content)
                                     yield "reasoning", content
 
                                 if delta.get("reasoning_content") is None and delta.get(
                                     "content"
                                 ):
                                     content = delta["content"]
-                                    logger.info(
-                                        f"提取内容信息，推理阶段结束: {content}"
-                                    )
+                                    logger.info("提取内容信息，推理阶段结束: %s", content)
                                     yield "content", content
                             else:
                                 # 处理其他模型的输出
@@ -124,7 +123,7 @@ class DeepSeekClient(BaseClient):
                                     content = delta["content"]
                                     if content == "":  # 只跳过完全空的字符串
                                         continue
-                                    logger.debug(f"非原生推理内容：{content}")
+                                    logger.debug("非原生推理内容：%s", content)
                                     accumulated_content += content
 
                                     # 检查累积的内容是否包含完整的 think 标签对
@@ -136,13 +135,13 @@ class DeepSeekClient(BaseClient):
 
                                     if "<think>" in content and not is_collecting_think:
                                         # 开始收集推理内容
-                                        logger.debug(f"开始收集推理内容：{content}")
+                                        logger.debug("开始收集推理内容：%s", content)
                                         is_collecting_think = True
                                         yield "reasoning", content
                                     elif is_collecting_think:
                                         if "</think>" in content:
                                             # 推理内容结束
-                                            logger.debug(f"推理内容结束：{content}")
+                                            logger.debug("推理内容结束：%s", content)
                                             is_collecting_think = False
                                             yield "reasoning", content
                                             # 输出空的 content 来触发 Claude 处理
@@ -157,6 +156,6 @@ class DeepSeekClient(BaseClient):
                                         yield "content", content
 
             except json.JSONDecodeError as e:
-                logger.error(f"JSON 解析错误: {e}")
+                logger.error("JSON 解析错误: %s", e)
             except Exception as e:
-                logger.error(f"处理 chunk 时发生错误: {e}")
+                logger.error("处理 chunk 时发生错误: %s", e)

@@ -5,8 +5,7 @@ import json
 import time
 from typing import AsyncGenerator, Dict, Any, List
 
-from app.clients import DeepSeekClient
-from app.clients.openai_compatible_client import OpenAICompatibleClient
+from app.clients import DeepSeekClient,OpenAICompatibleClient
 from app.utils.logger import logger
 
 
@@ -15,27 +14,19 @@ class OpenAICompatibleComposite:
 
     def __init__(
         self,
-        deepseek_api_key: str,
-        openai_api_key: str,
-        deepseek_api_url: str = "https://api.deepseek.com/v1/chat/completions",
-        openai_api_url: str = "",  # 将由具体实现提供
+        deepseek_instance: DeepSeekClient,
+        openai_instance: OpenAICompatibleClient,
         is_origin_reasoning: bool = True,
-        reasoner_proxy: str = None,
-        target_proxy: str = None
     ):
         """初始化 API 客户端
 
         Args:
-            deepseek_api_key: DeepSeek API密钥
-            openai_api_key: OpenAI 兼容服务的 API密钥
-            deepseek_api_url: DeepSeek API地址
-            openai_api_url: OpenAI 兼容服务的 API地址
-            is_origin_reasoning: 是否使用原始推理过程
-            reasoner_proxy: reasoner模型代理服务器地址
-            target_proxy: target模型代理服务器地址
+            deepseek_instance: DeepSeekClient 实例
+            openai_instance: OpenAICompatibleClient 实例
+            is_origin_reasoning: 是否使用原始推理
         """
-        self.deepseek_client = DeepSeekClient(deepseek_api_key, deepseek_api_url, proxy=reasoner_proxy)
-        self.openai_client = OpenAICompatibleClient(openai_api_key, openai_api_url, proxy=target_proxy)
+        self.deepseek_client = deepseek_instance
+        self.openai_client = openai_instance
         self.is_origin_reasoning = is_origin_reasoning
 
     async def chat_completions_with_stream(
@@ -249,7 +240,7 @@ class OpenAICompatibleComposite:
             {
                 "index": 0,
                 "message": {
-                    "role": "assistant", 
+                    "role": "assistant",
                     "content": "".join(content_parts),
                     "reasoning_content": "".join(reasoning_parts)
                 },

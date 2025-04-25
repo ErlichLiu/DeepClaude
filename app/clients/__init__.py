@@ -1,5 +1,5 @@
-from .base_client import BaseClient
 from .deepseek_client import DeepSeekClient
 from .claude_client import ClaudeClient
+from .openai_compatible_client import OpenAICompatibleClient
 
-__all__ = ['BaseClient', 'DeepSeekClient', 'ClaudeClient']
+__all__ = ['DeepSeekClient', 'ClaudeClient', 'OpenAICompatibleClient']

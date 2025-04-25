@@ -62,7 +62,7 @@ class BaseClient(ABC):
         try:
             # 使用 connector 参数来优化连接池
             connector = aiohttp.TCPConnector(limit=100, force_close=True)
-            
+
             # 处理代理地址格式
             proxy_url = None
             if self.proxy:
@@ -71,13 +71,13 @@ class BaseClient(ABC):
                     proxy_url = f"http://{self.proxy}"
                 else:
                     proxy_url = self.proxy
-                logger.info(f"使用代理: {proxy_url}")
-            
+                logger.info("使用代理: %s" , proxy_url)
+
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.post(
-                    self.api_url, 
-                    headers=headers, 
-                    json=data, 
+                    self.api_url,
+                    headers=headers,
+                    json=data,
                     timeout=request_timeout,
                     proxy=proxy_url
                 ) as response:
@@ -121,4 +121,3 @@ class BaseClient(ABC):
         Yields:
             tuple[str, str]: (内容类型, 内容)
         """
-        pass
