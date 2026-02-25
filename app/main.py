@@ -129,7 +129,7 @@ async def chat_completions(request: Request):
                             status_code=400,
                             content=error_json
                         )
-                except:
+                except Exception:
                     pass
         # 如果是流式请求，返回流式错误响应
         if body.get("stream", True):
