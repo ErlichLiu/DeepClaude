@@ -78,6 +78,17 @@ class DeepSeekClient(BaseClient):
             "messages": messages,
             "stream": True
         }
+        
+        # 检测是否为 DeepSeek v3.1 模型，默认启用思考模式
+        is_v31_model = (
+            model == "deepseek-v3-1-250821" or
+            "v3.1" in model.lower() or
+            "v3-1" in model.lower()
+        )
+        
+        if is_v31_model:
+            data["thinking"] = {"type": "enabled"}
+            logger.info(f"检测到 DeepSeek v3.1 模型 ({model})，已启用思考模式")
 
         # 检查系统配置中的 save_deepseek_tokens 设置
         save_deepseek_tokens = self.system_config.get("save_deepseek_tokens", False)
